@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import Container from 'Components/Container';
 import Form from 'Components/Form';
@@ -7,47 +7,11 @@ import ContactList from 'Components/ContactList';
 import Filter from 'Components/Filter';
 // import initialContacts from 'Data/contacts.json';
 
-// function App() {
-//   const [contacts, setContacts] = useState([]);
-//   const [filter, setFilter] = useState('');
+function App() {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
 
-//   const addContact = data => {
-//     const newContact = { id: shortid.generate(), ...data };
-//     const contactNames = contacts.map(contact => contact.name);
-//     const isRepeat = contactNames.indexOf(data.name) !== -1;
-
-//     if (isRepeat) {
-//       alert(`${data.name} is already in Contacts`);
-//       return;
-//     }
-
-//     this.setState(oldState => ({
-//       contacts: [newContact, ...oldState.contacts],
-//     }));
-//   };
-
-//   return (
-//     <Container>
-//       <h1>Phonebook</h1>
-//       <Form onSubmit={this.addContact} />
-//       <h2>Contacts</h2>
-//       <Filter value={filter} onChange={this.filterContacts} />
-//       <ContactList
-//         contacts={visibleContacts}
-//         onDeleteContact={this.deleteContact}
-//       />
-//     </Container>
-//   );
-// }
-
-class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
-
-  addContact = data => {
-    const { contacts } = this.state;
+  const addContact = data => {
     const newContact = { id: shortid.generate(), ...data };
     const contactNames = contacts.map(contact => contact.name);
     const isRepeat = contactNames.indexOf(data.name) !== -1;
@@ -57,56 +21,48 @@ class App extends Component {
       return;
     }
 
-    this.setState(oldState => ({
-      contacts: [newContact, ...oldState.contacts],
-    }));
+    setContacts(prevState => [newContact, ...prevState]);
   };
 
-  deleteContact = id => {
-    this.setState(oldState => ({
-      contacts: oldState.contacts.filter(contact => contact.id !== id),
-    }));
+  const deleteContact = id => {
+    setContacts(prevState => prevState.filter(contact => contact.id !== id));
   };
 
-  filterContacts = e => {
-    const { name, value } = e.target;
-    this.setState({
-      [name]: value,
-    });
+  const filterContacts = e => {
+    const { value } = e.target;
+    setFilter(value);
   };
 
-  componentDidMount() {
+  useEffect(() => {
     const parsedContacts = JSON.parse(localStorage.getItem('contacts'));
     if (parsedContacts) {
-      this.setState({ contacts: parsedContacts });
+      setContacts(parsedContacts);
     }
-  }
+  }, []);
 
-  componentDidUpdate(oldProps, oldState) {
-    if (this.state.contacts !== oldState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  render() {
-    const normalizedFilter = this.state.filter.toLowerCase();
-    const visibleContacts = this.state.contacts.filter(contact =>
+  const visibleContacts = () => {
+    const normalizedFilter = filter.toLowerCase();
+    return contacts.filter(contact =>
       contact.name.toLowerCase().includes(normalizedFilter),
     );
+  };
 
-    return (
-      <Container>
-        <h1>Phonebook</h1>
-        <Form onSubmit={this.addContact} />
-        <h2>Contacts</h2>
-        <Filter value={this.state.filter} onChange={this.filterContacts} />
-        <ContactList
-          contacts={visibleContacts}
-          onDeleteContact={this.deleteContact}
-        />
-      </Container>
-    );
-  }
+  return (
+    <Container>
+      <h1>Phonebook</h1>
+      <Form onSubmit={addContact} />
+      <h2>Contacts</h2>
+      <Filter value={filter} onChange={filterContacts} />
+      <ContactList
+        contacts={visibleContacts()}
+        onDeleteContact={deleteContact}
+      />
+    </Container>
+  );
 }
 
 export default App;
