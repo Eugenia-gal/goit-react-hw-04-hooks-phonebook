@@ -7,8 +7,20 @@ import ContactList from 'Components/ContactList';
 import Filter from 'Components/Filter';
 // import initialContacts from 'Data/contacts.json';
 
+const useLocalStorage = (key, initialValue) => {
+  const [state, setState] = useState(() => {
+    return JSON.parse(window.localStorage.getItem(key)) ?? initialValue;
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(key, JSON.stringify(state));
+  }, [key, state]);
+
+  return [state, setState];
+};
+
 function App() {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useLocalStorage('contacts', []);
   const [filter, setFilter] = useState('');
 
   const addContact = data => {
@@ -32,17 +44,6 @@ function App() {
     const { value } = e.target;
     setFilter(value);
   };
-
-  useEffect(() => {
-    const parsedContacts = JSON.parse(localStorage.getItem('contacts'));
-    if (parsedContacts) {
-      setContacts(parsedContacts);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('contacts', JSON.stringify(contacts));
-  }, [contacts]);
 
   const visibleContacts = () => {
     const normalizedFilter = filter.toLowerCase();
